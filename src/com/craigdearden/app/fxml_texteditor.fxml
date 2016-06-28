@@ -7,36 +7,44 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<TitledPane animated="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" text="untitled" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8">
-  <content>
-    <AnchorPane minHeight="0.0" minWidth="0.0">
-         <children>
-            <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-              <menus>
-                <Menu mnemonicParsing="false" text="File">
-                  <items>
-                        <MenuItem mnemonicParsing="false" text="Unspecified Action" />
-                    <MenuItem mnemonicParsing="false" text="Close" />
-                        <MenuItem mnemonicParsing="false" text="Unspecified Action" />
-                        <MenuItem mnemonicParsing="false" text="Unspecified Action" />
-                        <MenuItem mnemonicParsing="false" text="Unspecified Action" />
-                        <MenuItem mnemonicParsing="false" text="Unspecified Action" />
-                        <MenuItem mnemonicParsing="false" text="Unspecified Action" />
-                  </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Edit">
-                  <items>
-                    <MenuItem mnemonicParsing="false" text="Delete" />
-                  </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Help">
-                  <items>
-                    <MenuItem mnemonicParsing="false" text="About" />
-                  </items>
-                </Menu>
-              </menus>
-            </MenuBar>
-            <TextArea AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" />
-         </children></AnchorPane>
-  </content>
-</TitledPane>
+<AnchorPane minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.craigdearden.app.TextEditorController">
+   <children>
+      <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+                  <MenuItem fx:id="menu_file_new" mnemonicParsing="false" onAction="#menu_file_new_CLICK" text="New" />
+                  <MenuItem fx:id="menu_file_open" mnemonicParsing="false" onAction="#menu_file_open_CLICK" text="Open" />
+                  <MenuItem fx:id="menu_file_save" mnemonicParsing="false" onAction="#menu_file_save_CLICK" text="Save" />
+                  <MenuItem fx:id="menu_file_saveAs" mnemonicParsing="false" onAction="#menu_file_saveAs_CLICK" text="Save As" />
+                  <MenuItem fx:id="menu_file_exit" mnemonicParsing="false" onAction="#menu_file_exit_CLICK" text="Exit" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Edit">
+            <items>
+                  <MenuItem fx:id="menu_edit_undo" mnemonicParsing="false" onAction="#menu_edit_undo_CLICK" text="Undo" />
+                  <MenuItem fx:id="menu_edit_cut" mnemonicParsing="false" onAction="#menu_edit_cut_CLICK" text="Cut" />
+                  <MenuItem fx:id="menu_edit_copy" mnemonicParsing="false" onAction="#menu_edit_copy_CLICK" text="Copy" />
+                  <MenuItem fx:id="menu_edit_paste" mnemonicParsing="false" onAction="#menu_edit_paste_CLICK" text="Paste" />
+              <MenuItem fx:id="menu_edit_delete" mnemonicParsing="false" onAction="#menu_edit_delete_CLICK" text="Delete" />
+                  <MenuItem fx:id="menu_edit_find" mnemonicParsing="false" onAction="#menu_edit_find_CLICK" text="Find" />
+                  <MenuItem fx:id="menu_edit_replace" mnemonicParsing="false" onAction="#menu_edit_replace_CLICK" text="Replace" />
+                  <MenuItem fx:id="menu_edit_selectAll" mnemonicParsing="false" onAction="#menu_edit_selectall_CLICK" text="Select All" />
+                  <MenuItem fx:id="menu_edit_datetimestamp" mnemonicParsing="false" onAction="#menu_edit_datetimestamp_CLICK" text="Stamp Time/Date" />
+            </items>
+          </Menu>
+            <Menu mnemonicParsing="false" text="Format">
+              <items>
+                <CheckMenuItem fx:id="wordWrap" mnemonicParsing="false" onAction="#menu_format_wordwrap_CLICK" text="Word Wrap" />
+              </items>
+            </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem fx:id="menu_help_about" mnemonicParsing="false" onAction="#menu_help_about_CLICK" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <TextArea fx:id="textArea" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" />
+   </children>
+</AnchorPane>

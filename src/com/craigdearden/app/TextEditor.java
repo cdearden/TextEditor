@@ -23,7 +23,7 @@ public class TextEditor extends Application
     public void start(Stage stage) throws Exception
     {
         Parent root = FXMLLoader.load(
-                getClass().getResource("FXMLDocument.fxml"));
+                getClass().getResource("fxml_texteditor.fxml"));
         
         Scene scene = new Scene(root);
         
@@ -35,7 +35,7 @@ public class TextEditor extends Application
             @Override
             public void handle(javafx.stage.WindowEvent _event)
             {
-                TextEditorController.exit();
+ //               TextEditorController.exit();
                 if(TextEditorController.getUnsavedChanges()) {
                     _event.consume();
                 }

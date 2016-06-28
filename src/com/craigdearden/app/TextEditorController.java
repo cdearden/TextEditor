@@ -7,12 +7,15 @@ package com.craigdearden.app;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Optional;
+import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.Stack;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -23,10 +26,22 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextInputDialog;
 import javafx.stage.FileChooser;
-import javafx.util.Pair;
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 /**
  *
@@ -34,35 +49,24 @@ import javafx.util.Pair;
  */
 public class TextEditorController implements Initializable {
 
-    //String fileName = 
-    private static File curDoc = null;
+    private File curDoc = null;
     private static boolean unsavedChanges = false;
     private Stack<Change> changes = new Stack<>();
     private String clipBoard = null;
 
     @FXML
-    private static TextArea textArea;
+    private TextArea textArea;
     @FXML
     private CheckMenuItem wordWrap;
 
     @FXML
     private void menu_file_new_CLICK(ActionEvent event) {
-
+        ButtonType response = null;
         if (unsavedChanges == true) {
-            Optional<ButtonType> response = prompt("Save",
-                    "Would you like to save your changes?");
+            response = promptToSave();
+        }
 
-            if (response.equals(ButtonType.YES)) {
-                if (curDoc != null) {
-                    save();
-                } else {
-                    saveAs();
-                }
-            } else if (response.equals(ButtonType.NO)) {
-                textArea.clear();
-                curDoc = null;
-            }
-        } else {
+        if (response != null && !response.equals(ButtonType.CANCEL)) {
             textArea.clear();
             curDoc = null;
         }
@@ -70,14 +74,25 @@ public class TextEditorController implements Initializable {
 
     @FXML
     private void menu_file_open_CLICK(ActionEvent event) {
+        if (unsavedChanges == true) {
+            promptToSave();
+        }
+
         FileChooser fc = new FileChooser();
         curDoc = fc.showOpenDialog(null);
-        curDoc.load();
+        if (curDoc != null) {
+            load();
+        }
     }
 
     @FXML
     private void menu_file_save_CLICK(ActionEvent event) {
-        save();
+        if (unsavedChanges == true && curDoc == null) {
+            saveAs();
+        } else if (unsavedChanges == true && curDoc != null) {
+            save();
+        }
+        unsavedChanges = false;
     }
 
     @FXML
@@ -128,17 +143,14 @@ public class TextEditorController implements Initializable {
         Optional<ButtonType> result = null;
 
         // Need to fix this code
-        Dialog<Pair<String, String>> find = new Dialog<>(ButtonType.);
-        find.setTitle("Find");
-        ButtonType findNext = new ButtonType();
-        find.showAndWait();
-        
-        
-    }
-
-    @FXML
-    private void menu_edit_findnext_CLICK(ActionEvent event) {
-        alert("Alert!", "Not yet implemented!");
+        TextInputDialog find = new TextInputDialog();
+        find.getDialogPane().getButtonTypes().addAll(ButtonType.PREVIOUS,
+                ButtonType.NEXT, ButtonType.CANCEL);
+        find.getDialogPane().lookupButton(ButtonType.NEXT).setDisable(
+                true);
+        find.getDialogPane().lookupButton(ButtonType.PREVIOUS).setDisable(
+                true);
+        find.show();
     }
 
     @FXML
@@ -147,18 +159,17 @@ public class TextEditorController implements Initializable {
     }
 
     @FXML
-    private void menu_edit_goto_CLICK(ActionEvent event) {
-        alert("Alert!", "Not yet implemented!");
-    }
-
-    @FXML
     private void menu_edit_selectall_CLICK(ActionEvent event) {
-        alert("Alert!", "Not yet implemented!");
+        textArea.selectAll();
     }
 
     @FXML
     private void menu_edit_datetimestamp_CLICK(ActionEvent event) {
-        alert("Alert!", "Not yet implemented!");
+        int caretPosition = textArea.caretPositionProperty().get();
+        SimpleDateFormat sdate = new SimpleDateFormat(
+                "EEE, d MMM yyyy HH:mm:ss aaa");
+        Date date = new Date();
+        textArea.insertText(caretPosition, sdate.format(date));
     }
 
     @FXML
@@ -174,17 +185,21 @@ public class TextEditorController implements Initializable {
 
     @FXML
     private void menu_format_font_CLICK(ActionEvent event) {
-        alert("Alert!", "Not yet implemented!");
-    }
 
-    @FXML
-    private void menu_format_highlight_CLICK(ActionEvent event) {
+        // Need to work on this code
+        textArea.setStyle("-fx-font-size: 30px;" +
+                "-fx-font-style: italic;" +
+                "-fx-font-weight: bold;" +
+                "-fx-font-family: fantasy;" +
+                "-fx-text-fill: blue;" +
+                "-fx-background-color: aqua");
+
         alert("Alert!", "Not yet implemented!");
     }
 
     @FXML
     private void menu_help_about_CLICK(ActionEvent event) {
-        alert("Alert!", "Not yet implemented!");
+        alert("About", "Text Editor V1.0");
     }
 
     @Override
@@ -195,14 +210,18 @@ public class TextEditorController implements Initializable {
                     final ObservableValue<? extends String> observable,
                     final String oldValue, final String newValue) {
                 unsavedChanges = true;
-
+                logDifference(oldValue, newValue);
+                System.out.println(" Text Changed from  " + oldValue +
+                        ".........\n");
+                System.out.println(" Text Changed to  " + newValue +
+                        ",,,,,,,,,,\n");
             }
         });
 
         textArea.setWrapText(true);
     }
 
-    private Change difference(String oldContent, String newContent) {
+    private Change logDifference(String oldContent, String newContent) {
         Change.Action action = null;
         String data = null;
         int position = 0;
@@ -213,56 +232,99 @@ public class TextEditorController implements Initializable {
         return change;
     }
 
-    private static void save() throws FileNotFoundException, IOException {
+    private ButtonType promptToSave() {
+        Optional<ButtonType> response = prompt("Save",
+                "Would you like to save your changes?");
+
+        if (response.get().equals(ButtonType.YES) && curDoc != null) {
+            save();
+            unsavedChanges = false;
+        } else if (response.get().equals(ButtonType.YES) && curDoc == null) {
+            saveAs();
+            unsavedChanges = false;
+        } else if (response.get().equals(ButtonType.NO)) {
+            unsavedChanges = false;
+        }
+
+        return response.get();
+    }
+
+    private void save() {
         String text = textArea.getText();
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(curDoc))) {
             bw.write(text);
+        } catch (IOException ex) {
+            alert("Alert!", "Unable to save file.");
         }
     }
 
-    private static void saveAs() {
+    private void saveAs() {
         FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(curDoc);
         curDoc = fc.showSaveDialog(null);
-        save();
+        if (curDoc != null) {
+            save();
+        }
     }
 
-    private void load() throws IOException {
+    private void load() {
         try (BufferedReader br = new BufferedReader(new FileReader(curDoc))) {
             while (br.ready()) {
-                textArea.appendText(br.readLine());
+                textArea.appendText(br.readLine() + '\n');
             }
+        } catch (IOException ex) {
+            alert("Alert!", "Unable to load file.");
         }
-    }
-
-    private void savePrompt() {
-
     }
 
     public static boolean getUnsavedChanges() {
         return unsavedChanges;
     }
 
-    public static void exit() {
-        if (unsavedChanges == true) {
-            Optional<ButtonType> response = prompt("Save",
-                    "Would you like to save your changes before exiting?");
-
-            if (response.equals(ButtonType.YES)) {
-                if (curDoc != null) {
-                    save();
-                } else {
-                    saveAs();
-                }
-            } else if (response.equals(ButtonType.NO)) {
-                Platform.exit();
-            }
-        } else {
+    public void exit() {
+        ButtonType response = null;
+        
+        if (unsavedChanges == true)
+            response = promptToSave();
+        
+        if(response != null && response.equals(ButtonType.CANCEL))
             Platform.exit();
+    }
+
+    private void sendEmail(String to, String from, String host, String subject,
+            String body) {
+        Properties properties = System.getProperties();
+        properties.setProperty("mail.smtp.host", host);
+
+        Session session = Session.getDefaultInstance(properties);
+
+        try {
+            MimeMessage message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(from));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(
+                    to));
+            message.setSubject(subject);
+
+            BodyPart newBodyPart = new MimeBodyPart();
+            newBodyPart.setText(body);
+
+            Multipart multipart = new MimeMultipart();
+            multipart.addBodyPart(newBodyPart);
+
+            newBodyPart = new MimeBodyPart();
+            DataSource source = new FileDataSource(curDoc);
+            newBodyPart.setDataHandler(new DataHandler(source));
+            newBodyPart.setFileName(curDoc.getName());
+            multipart.addBodyPart(newBodyPart);
+
+            message.setContent(multipart);
+
+            Transport.send(message);
+        } catch (MessagingException ex) {
+            alert("Alert!", "Error. Message not sent!");
         }
     }
 
-    private static void alert(String title, String message) {
+    private void alert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setGraphic(null);
         alert.setHeaderText(null);
@@ -271,7 +333,7 @@ public class TextEditorController implements Initializable {
         alert.showAndWait();
     }
 
-    private static Optional<ButtonType> prompt(String title, String message) {
+    private Optional<ButtonType> prompt(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.NONE);
         alert.setHeaderText(title);
         alert.setContentText(message);
@@ -279,5 +341,4 @@ public class TextEditorController implements Initializable {
                 ButtonType.CANCEL);
         return alert.showAndWait();
     }
-
 }
